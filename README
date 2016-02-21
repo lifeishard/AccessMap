@@ -1,0 +1,5 @@
+# AccessMap
+Essentially a street map for color blind people in C++.
+It also has a couple of additional algorithmic features, most notably solving a multidepot vehicle routing problem akin to planning road trips with stops.
+It is multithreaded and includes audio aids to help visually impared users.
+Written by Michael Chen, Carl Zhao and Victor Ouyang.

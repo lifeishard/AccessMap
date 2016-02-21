@@ -1,0 +1,79 @@
+/* 
+ * File:   Feature.cpp
+ * Author: chenyu69
+ * 
+ * Created on January 27, 2015, 11:27 PM
+ */
+
+#include "Feature.h"
+#include <iostream>
+using namespace std;
+
+Feature::Feature(int64_t _ID, char _shape)
+{
+    ID = _ID;
+    shape = _shape;
+
+    
+}
+
+Feature::Feature() {}
+
+Feature::Feature(const Feature& orig) 
+{
+    ID = orig.ID;
+    shape = orig.shape;
+    drawPoints = orig.drawPoints;
+    top = orig.top;
+    left = orig.left;
+    right = orig.right;
+    bottom = orig.bottom;
+}
+
+Feature::~Feature() {}
+
+void Feature::testoutput()
+{
+    cout << ID << endl;
+    cout << drawPoints.size() << endl;
+    cout << int(shape) << endl;
+}
+
+void Feature::setdrawPoints(vector<Cord> _drawPoints)
+{
+    drawPoints = _drawPoints;
+}
+
+vector<Cord> Feature::getdrawPoints()
+{
+    return drawPoints;
+}
+
+bool Feature::isClosed()
+{
+    return shape;
+}
+
+void Feature::setCords( double _bottom, double _top,double _left,double _right)
+{
+    top = _top;
+    bottom = _bottom;
+    left = _left;
+    right = _right;
+}
+ double Feature::getbottom()
+ {
+     return bottom;
+ }
+double Feature::gettop()
+{
+    return top;
+}
+double Feature::getleft()
+{
+    return left;
+}
+double Feature::getright()
+{
+    return right;
+}

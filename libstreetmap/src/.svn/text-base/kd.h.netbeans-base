@@ -1,0 +1,26 @@
+/* 
+ * File:   kd.h
+ * Author: chenyu69
+ *
+ * Created on February 1, 2015, 11:33 PM
+ */
+
+#ifndef KD_H
+#define	KD_H
+#include "LatLon.h"
+using namespace std;
+class kd {
+public:
+    kd();
+    kd(const kd& orig);
+    virtual ~kd();
+private:
+    int64_t ID;
+    int64_t x,y;
+    kd * left,*right;
+    
+
+};
+
+#endif	/* KD_H */
+

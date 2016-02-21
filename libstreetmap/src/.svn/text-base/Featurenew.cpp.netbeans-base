@@ -1,0 +1,287 @@
+/* 
+ * File:   Featurenew.cpp
+ * Author: chenyu69
+ * 
+ * Created on January 27, 2015, 11:27 PM
+ */
+
+#include "Featurenew.h"
+#include <iostream>
+using namespace std;
+
+Featurenew::Featurenew(int64_t _ID, char _shape, int64_t _nPoints)
+{
+    ID = _ID;
+    shape = _shape;
+    nPoints = _nPoints;
+    polyPoints = NULL;
+    polyMiniPoints = NULL;
+    //void drawFeaturenew(unsigned i, char mini)
+//{
+    //closed featurenews are polygons
+    if (_shape) {
+        lineStyle = SOLID;
+      //  lineWidth = THINNESTLINE;
+    //converts vector of cords to array of t_points for fillpoly
+        //naming convention for type is "firststring-secondstring"
+        //LAKEBLUE is an example doesn't actually exist
+        if(getFeatureAttribute(_ID, "water")!= "")
+        {
+            featurenewType = "water-";
+            colorID = WATERC;
+        }
+        else if(getFeatureAttribute(_ID, "natural") == "water" )
+        {
+            featurenewType = "natural-water";
+            colorID = WATERC;
+        }
+        else if(getFeatureAttribute(_ID, "natural") == "wetland" )
+        {
+            featurenewType = "natural-wetland";
+            colorID = WATERC;
+        }
+        
+        /*
+        
+        //filter through some featurenews I want to draw
+        if   (getFeaturenewAttribute(_ID, "water") != "" || 
+            getFeaturenewAttribute(i, "natural") == "water" || // CONFIRMED
+            getFeaturenewAttribute(i, "natural") == "wetland" || // CONFIRMED
+            getFeaturenewAttribute(i, "natural") == "bay" || // NON IN TORONTO
+            getFeaturenewAttribute(i, "natural") == "glacier" || // NON IN TORONTO
+            getFeaturenewAttribute(i, "waterway") == "riverbank" || // CONFIRMED
+            getFeaturenewAttribute(i, "waterway") == "boatyard") { // CONFIRMED
+            setcolor(colorScheme[4][m]); // BLUE
+            
+            
+            
+            
+        } else if (getFeaturenewAttribute(i, "natural") == "sand" || // CONFIRMED
+                   getFeaturenewAttribute(i, "natural") == "mud" ||  // NON IN TORONTO
+                   getFeaturenewAttribute(i, "natural") == "scree" || // NON IN TORONTO
+                   getFeaturenewAttribute(i, "natural") == "bare_rock" || // NON IN TORONTO
+                   getFeaturenewAttribute(i, "natural") == "beach" || // CONFIRMED
+                   getFeaturenewAttribute(i, "land") == "island") {  // CONFIRMED
+            setcolor(colorScheme[5][m]);
+        } else if (getFeaturenewAttribute(i, "natural") == "wood" ||  // CONFIRMED
+                   getFeaturenewAttribute(i, "natural") == "scrub" ||  // CONFIRMED
+                   getFeaturenewAttribute(i, "natural") == "fell" ||  // NON IN TORONTO
+                   getFeaturenewAttribute(i, "natural") == "moor" ||  // NON IN TORONTO
+                   getFeaturenewAttribute(i, "natural") == "heath" || // CONFIRMED
+                   getFeaturenewAttribute(i, "natural") == "grassland" || // CONFIRMED
+                   getFeaturenewAttribute(i, "leisure") == "park"){ // CONFIRMED
+            setcolor(colorScheme[6][m]);
+        }
+        */
+
+        
+        
+        
+    } else { 
+        
+        if(getFeatureAttribute(_ID, "natural") == "tree_row")
+        {
+            featurenewType = "natural-tree_row";
+            colorID = GREEN;
+            lineStyle = DASHED;
+         //   lineWidth = THINNESTLINE;
+        }
+        else if(getFeatureAttribute(_ID, "waterway") == "stream" )
+        {
+            featurenewType = "waterway-stream";
+            colorID = BLUE;
+            lineStyle = SOLID;
+          //  lineWidth = THINNESTLINE;
+        }
+        
+        
+        /*
+        //open featurenews are lines
+        if (tBoundCurrent.get_width() < featurenewOpenThreshold || mini) {
+            if (getFeaturenewAttribute(i, "natural") == "tree_row") { // CONFIRMED
+                setcolor(colorScheme[6][m]);
+                setlinestyle(DASHED);
+            } else if (getFeaturenewAttribute(i, "waterway") == "stream" || // CONFIRMED
+                       getFeaturenewAttribute(i, "waterway") == "river") { // CONFIRMED
+                setcolor(colorScheme[4][m]);
+                setlinestyle(SOLID);
+            }
+
+         
+        }
+         * */
+    }
+//}
+
+}
+
+Featurenew::Featurenew() 
+{
+    polyPoints = NULL;
+    polyMiniPoints = NULL;
+}
+
+Featurenew::Featurenew(const Featurenew& orig) 
+{
+    ID = orig.ID;
+    shape = orig.shape;
+    drawPoints = orig.drawPoints;
+    boundary = orig.boundary;
+    colorID = orig.colorID;
+    featurenewType = orig.featurenewType;
+    lineStyle = orig.lineStyle;
+    lineWidth = orig.lineWidth;
+    nPoints = orig.nPoints;
+    polyPoints = new t_point[nPoints];
+    polyMiniPoints = new t_point[nPoints];
+    memcpy(polyPoints,orig.polyPoints,nPoints * sizeof(t_point));
+    memcpy(polyMiniPoints,orig.polyMiniPoints,nPoints * sizeof(t_point));
+}
+
+int64_t Featurenew::getnPoints()
+{
+    return nPoints;
+}
+
+t_bound_box Featurenew::getboundary()
+{
+    return boundary;
+}
+
+int64_t Featurenew::getcolorID()
+{
+    return colorID;
+}
+
+string Featurenew::getfeaturenewType()
+{
+    return featurenewType;
+}
+
+int64_t Featurenew::getlineStyle()
+{
+    return lineStyle;
+}
+
+int64_t Featurenew::getlineWidth()
+{
+    return lineWidth;
+}
+
+t_point* Featurenew::getpolyPoints()
+{
+    return polyPoints;
+}
+
+t_point* Featurenew::getpolyMiniPoints()
+{
+    return polyMiniPoints;
+}
+
+Featurenew::~Featurenew() 
+{
+    if(polyPoints != NULL)
+    {
+        delete [] polyPoints;
+    }
+    if(polyMiniPoints != NULL)
+    {
+        delete [] polyMiniPoints;
+    }
+}
+
+void Featurenew::testoutput()
+{
+    cout << ID << endl;
+    cout << drawPoints.size() << endl;
+    cout << int(shape) << endl;
+}
+
+void Featurenew::setdrawPoints(vector<Cord> & _drawPoints)
+{
+    drawPoints = _drawPoints;
+}
+
+void Featurenew::updatepolyPoints()
+{
+    for(unsigned i = 0; i < nPoints; i++)
+    {
+        polyPoints[i] = t_point(drawPoints[i].getx(),drawPoints[i].gety());
+    }
+
+}
+
+void Featurenew::updatepolyMiniPoints()
+{
+    for(unsigned i = 0; i < nPoints; i++)
+    {
+        polyMiniPoints[i] = t_point(drawPoints[i].getx(),drawPoints[i].gety());
+    }
+    
+    /*
+     * old code for mini treatment
+     * modify above to make it work
+     *       
+     *         if(mini)
+        {
+            for (unsigned j = 0; j < featurenewPointsCord.size(); j ++) {
+                
+                featurenewPoints[j] = t_point(miniX+featurenewPointsCord[j].getx()*miniMultiplierX,miniY+featurenewPointsCord[j].gety()*miniMultiplierY);
+            }
+        }
+     * 
+     *       if(mini)
+            {
+                double miniMultiplierX = miniSizeRatio*tBoundCurrent.get_width()/maxX;
+                double miniMultiplierY = miniSizeRatio*tBoundCurrent.get_width()/maxY;
+                double miniAddX = (tBoundCurrent.get_xcenter()+tBoundCurrent.get_width()/2)-
+                    miniOffsetRatio*tBoundCurrent.get_width()-miniSizeRatio*tBoundCurrent.get_width()/2;
+                double miniAddY = (tBoundCurrent.get_ycenter()-tBoundCurrent.get_height()/2)+
+                    miniOffsetRatio*tBoundCurrent.get_width()-miniSizeRatio*tBoundCurrent.get_width()/2;
+                for (unsigned j = 0; j < featurenewPointsCord.size() - 1; j ++) {
+                    drawline(miniAddX+featurenewPointsCord[j].getx()*miniMultiplierX,
+                            miniAddY+featurenewPointsCord[j].gety()*miniMultiplierY,
+                            miniAddX+featurenewPointsCord[j+1].getx()*miniMultiplierX,
+                            miniAddY+featurenewPointsCord[j+1].gety()*miniMultiplierY);
+                }
+            }
+     */
+    
+    
+}
+
+vector<Cord> Featurenew::getdrawPoints()
+{
+    return drawPoints;
+}
+
+int64_t Featurenew::getID()
+{
+    return ID;
+}
+
+bool Featurenew::isClosed()
+{
+    return shape;
+}
+
+void Featurenew::setboundary()
+{        
+   int64_t xMaxCalc = -1 * XYBOUNDS;
+   int64_t xMinCalc = XYBOUNDS;
+   int64_t yMaxCalc = -1 * XYBOUNDS;
+   int64_t yMinCalc = XYBOUNDS;
+           
+        for(unsigned j = 0; j < drawPoints.size();j++)
+        {
+           // tempFeaturenews[i][j].drawOffset();
+            if(drawPoints[j].getx() < xMinCalc)xMinCalc = drawPoints[j].getx();
+             if(drawPoints[j].getx() > xMaxCalc)xMaxCalc = drawPoints[j].getx();
+             if(drawPoints[j].gety() < yMinCalc)yMinCalc = drawPoints[j].gety();
+            if(drawPoints[j].gety() > yMaxCalc)yMaxCalc = drawPoints[j].gety();
+        }
+           
+           boundary =  t_bound_box(xMinCalc, yMinCalc, xMaxCalc, yMaxCalc);
+           
+          //store the rectangular boundary cords for the featurenew
+}

@@ -1,0 +1,288 @@
+#include <queue>
+
+#include "AlgorithmHelper.h"
+#include "Intersect.h"
+double maxSpeed;//in m per sec
+double halfDEGTORAD = DEG_TO_RAD/2.0;
+double DEGproductEARTHRADIUS = DEG_TO_RAD*EARTH_RADIUS_IN_METERS;
+
+double AstarHeuristic1(double lat1,double lon1, double lat2,double lon2) 
+{
+ 
+    double xConversion = cos(DEGproductEARTHRADIUS*(lat1+lat2));
+    double xDiff = xConversion * (lon1-lon2);
+    double yDiff = lat1-lat2;
+    return sqrt(xDiff*xDiff + yDiff*yDiff)/maxSpeed;
+}
+
+const int64_t endOfPath = 88888888;
+vector<vector<pair<int,double> > > ANodeFinal;
+
+
+vector<vector<pair<int64_t,int64_t> > > oldIntToNewInt;
+vector<int64_t> useableStreetSegs; //1 is true
+vector<int64_t> primeNodes; //1 is true
+vector<int64_t> allPrimeNodes;
+vector<int64_t> newIntToOldInt;
+vector<int64_t> newIntToOldStreet;
+int64_t newIntCounter;
+int64_t tempCounter = 0;
+vector<ANode> allANode;
+vector<BNode> allBNode;
+void AstarSetup()
+{
+    newIntCounter = 0;
+    int64_t otherEnd;
+    int64_t StreetID;
+    vector <int64_t> tempStreets;
+    vector <int64_t> tempStreetSegs;
+    int64_t currentANodeID;
+    int64_t otherEndANodeID;
+    ANode blankANode;
+    APath blankAPath;
+    BNode blankBNode;
+    int64_t multiPathFlag;
+    int64_t BNodeEndFlag;
+    DPath blankDPath;
+    DPath tempDPath;
+    vector<APath> tempAPath;
+    
+    //queue<pair<int64_t,double> >nextNode;
+    
+    priority_queue <DPath,vector<DPath>,DPathcomparison> DPathQueue;   
+    vector<int64_t>nodesVisitedToClear;
+    vector<int64_t>nodesVisited;
+    int64_t oldNodeID;
+    int64_t oldStreetID;
+    for(unsigned i = 0; i < allIntersects.size(); i++)
+    {
+        allBNode.push_back(blankBNode);
+        oldIntToNewInt.push_back(vector<pair<int64_t,int64_t> >());
+        nodesVisited.push_back(0);
+        //check to see if its a primenode
+        if(allIntersects[i].getStreets().size() < 2)
+        {
+            primeNodes.push_back(0);
+            continue;
+        }
+        else
+        {
+            primeNodes.push_back(1);
+            allPrimeNodes.push_back(i);
+            tempStreets = allIntersects[i].getStreets();
+            //if(tempStreets.size() > 2)tempCounter ++;
+            for(unsigned j = 0; j < tempStreets.size();j++)
+            {
+                
+                oldIntToNewInt[i].push_back(make_pair(tempStreets[j],newIntCounter));
+                newIntToOldInt.push_back(i);
+                newIntToOldStreet.push_back(tempStreets[j]);
+                allANode.push_back(blankANode);
+                newIntCounter++;
+            }
+        }
+         
+    }
+
+    
+    for(unsigned i = 0; i < newIntCounter; i++)
+    {
+cout<<i<<endl;
+        oldNodeID = newIntToOldInt[i];
+        oldStreetID = newIntToOldStreet[i];
+        tempStreetSegs = allIntersects[oldNodeID].getStreetSegs();
+        cout<<i<<endl;
+        blankAPath.Node = i;
+        
+        for(unsigned j = 0; j < tempStreetSegs.size(); j++)
+        {
+            if(allStreetSegs[tempStreetSegs[j]].getStreet() == oldStreetID)
+            {
+                if(allStreetSegs[tempStreetSegs[j]].gettype()||allStreetSegs[tempStreetSegs[j]].getEnds().first == oldNodeID)
+                {
+                    if(allStreetSegs[tempStreetSegs[j]].getEnds().first == oldNodeID)otherEnd = allStreetSegs[tempStreetSegs[j]].getEnds().second;
+                    else otherEnd = allStreetSegs[tempStreetSegs[j]].getEnds().first;
+                    
+                    blankAPath.StreetSegID = tempStreetSegs[j];
+                    blankAPath.travelTime = allStreetSegs[tempStreetSegs[j]].getTime();
+                    blankDPath.howToGetHere.clear();
+                    blankDPath.howToGetHere.push_back(blankAPath);
+                    blankDPath.curNode = otherEnd;
+                    blankDPath.timeToInit = allStreetSegs[tempStreetSegs[j]].getTime();
+                    blankDPath.prevStreetSeg = tempStreetSegs[j];
+                }
+                DPathQueue.push(blankDPath);
+            }
+        }
+        
+        
+        
+        nodesVisited[oldNodeID] = 1;
+        nodesVisitedToClear.push_back(oldNodeID);
+         
+        while(!DPathQueue.empty())
+        {
+            blankDPath = DPathQueue.top();
+            DPathQueue.pop();
+if(blankDPath.curNode > 200000) cout << "wtf??"<<endl;
+
+
+            if(!nodesVisited[blankDPath.curNode])
+            {
+                nodesVisited[blankDPath.curNode] = 1;
+                nodesVisitedToClear.push_back(blankDPath.curNode);
+                if(primeNodes[blankDPath.curNode])
+                {
+cout<<"ENTERprimenode"<<endl;
+                    for(unsigned k = 0; k < oldIntToNewInt[blankDPath.curNode].size(); k++)
+                    {
+                        if(oldIntToNewInt[blankDPath.curNode][k].first == oldStreetID)
+                        {
+                            otherEndANodeID = oldIntToNewInt[blankDPath.curNode][k].second;
+                            break;   
+                        }
+                    }
+cout<<"POINT 1"<<endl;                    
+                    
+                    blankAPath.Node = otherEndANodeID;
+                    blankAPath.travelTime = endOfPath;
+                    blankAPath.StreetSegID = endOfPath;
+                    //blankDPath.howToGetHere.push_back(blankAPath);
+                    tempAPath = blankDPath.howToGetHere;
+                    tempAPath.push_back(blankAPath);
+                    allANode[i].outANode.push_back(blankDPath.howToGetHere);
+cout<<"EXITprimenode"<<endl;
+                }
+                
+                else
+                {
+cout<<"ENTERnonprime"<<endl;
+                    blankAPath.Node = blankDPath.curNode;
+                    blankAPath.travelTime = endOfPath;
+                    blankAPath.StreetSegID = endOfPath;
+                    tempAPath = blankDPath.howToGetHere;
+                    tempAPath.push_back(blankAPath);
+                    allBNode[blankDPath.curNode].ANodesIn.push_back(tempAPath);
+                    
+                    tempStreetSegs = allIntersects[blankDPath.curNode].getStreetSegs();
+cout<<"POINT 2"<<endl;   
+
+                     for(unsigned j = 0; j < tempStreetSegs.size(); j++)
+                     {
+                         if(tempStreetSegs[j] != blankDPath.prevStreetSeg)
+                         {
+                             if(allStreetSegs[tempStreetSegs[j]].gettype()||allStreetSegs[tempStreetSegs[j]].getEnds().first == oldNodeID)
+                             {
+                                 
+                                 if(allStreetSegs[tempStreetSegs[j]].getEnds().first == oldNodeID)otherEnd = allStreetSegs[tempStreetSegs[j]].getEnds().second;
+                                 else otherEnd = allStreetSegs[tempStreetSegs[j]].getEnds().first;
+                                 
+                                 tempDPath = blankDPath;
+                                 
+                                 blankAPath.StreetSegID = tempStreetSegs[j];
+                                 blankAPath.travelTime = allStreetSegs[tempStreetSegs[j]].getTime();
+                                 tempDPath.howToGetHere.push_back(blankAPath);
+                                 tempDPath.curNode = otherEnd;
+                                 tempDPath.timeToInit = allStreetSegs[tempStreetSegs[j]].getTime();
+                                 tempDPath.prevStreetSeg = tempStreetSegs[j];
+                             }
+                             DPathQueue.push(tempDPath);
+                         }
+                     }
+cout<<"EXITnonprime"<<endl;                
+}
+            }
+
+        }
+            
+        for(unsigned j = 0 ; j < nodesVisitedToClear.size(); j++ )
+        {
+            nodesVisited[nodesVisitedToClear[j]] = 0;
+        }
+            nodesVisitedToClear.clear();
+
+    }
+    
+    /*
+    for(unsigned i = 0; i < allPrimeNodes.size(); i++)
+    {
+     
+       tempStreetSegs = allIntersects[allPrimeNodes[i]].getStreetSegs();
+       for(unsigned j = 0; j < tempStreetSegs.size(); j++)
+       {
+            if(allStreetSegs[tempStreetSegs[j]].getEnds().first == allPrimeNodes[i])otherEnd = allStreetSegs[tempStreetSegs[j]].getEnds().second;
+            else otherEnd = allStreetSegs[tempStreetSegs[j]].getEnds().first;
+            StreetID = allStreetSegs[tempStreetSegs[j]].getStreet();
+            if(primeNodes[otherEnd])
+            {
+                //if other end is prime node and path is two way or one way from current node
+                if(allStreetSegs[tempStreetSegs[j]].gettype()||allStreetSegs[tempStreetSegs[j]].getEnds().first == allPrimeNodes[i])
+                {
+                    for(unsigned k = 0; k < oldIntToNewInt[allPrimeNodes[i]].size(); k++)
+                    {
+                        if(oldIntToNewInt[allPrimeNodes[i]][k].first == StreetID)
+                        {
+                            currentANodeID = oldIntToNewInt[allPrimeNodes[i]][k].second;
+                            break;   
+                        }
+                    }
+                    for(unsigned k = 0; k < oldIntToNewInt[otherEnd].size(); k++)
+                    {
+                        if(oldIntToNewInt[otherEnd][k].first == StreetID)
+                        {
+                            otherEndANodeID = oldIntToNewInt[allPrimeNodes[i]][k].second;
+                            break;   
+                        }
+                    }
+                    
+                    multiPathFlag = 1;
+                    for(unsigned k = 0; k <  allANode[currentANodeID].outANode.size(); k++)
+                    {
+                        if(allANode[currentANodeID].outANode[k][0].endNode == otherEndANodeID)
+                        {
+                            multiPathFlag = 0;
+                            if(allANode[currentANodeID].outANode[k][0].travelTime > allStreetSegs[tempStreetSegs[j]].getTime())
+                            {
+                                allANode[currentANodeID].outANode[k][0].travelTime = allStreetSegs[tempStreetSegs[j]].getTime();
+                                allANode[currentANodeID].outANode[k][0].StreetSegID = allStreetSegs[tempStreetSegs[j]].getID();
+                            }
+                        }
+                    }
+                    if(multiPathFlag)
+                    {
+                        blankAPath.endNode = otherEndANodeID;
+                        blankAPath.StreetSegID = allStreetSegs[tempStreetSegs[j]].getID();
+                        blankAPath.travelTime = allStreetSegs[tempStreetSegs[j]].getTime();
+                        allANode[currentANodeID].outANode.push_back(vector<APath>(1,blankAPath));
+                    }
+                }
+                    
+               
+                }
+            else
+            {
+                //floodfill
+                nextNode.push_back(make_pair(otherEnd,allStreetSegs[tempStreetSegs[j]].getTime()));
+            }
+        }
+   }
+       
+  
+    
+    */
+
+    for(unsigned i = 0; i < 100 ;i++)
+    {
+        for(unsigned j = 0; j<allANode[i].outANode.size(); j++ )
+        {
+                 cout << allANode[i].outANode[j][0].StreetSegID << " dist:" << allANode[i].outANode[j][0].travelTime<< " "  ; 
+        }
+        cout<<endl;
+ 
+    }
+
+    
+   // cout << newIntCounter <<endl;
+  //  cout << tempCounter<<endl;
+}
+

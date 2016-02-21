@@ -1,0 +1,18 @@
+/* 
+ * File:   Functions.h
+ * Author: zhaozhi4
+ *
+ * Created on January 29, 2015, 3:33 PM
+ */
+
+#ifndef FUNCTIONS_H
+#define	FUNCTIONS_H
+#include <vector>
+#include "StreetsDatabaseAPI.h"
+
+std::vector<int64_t> intersectStreetSegs(int64_t id);
+bool intersectConnected(int64_t ID1, int64_t ID2);
+std::vector<int64_t> intersectionAdjacent(int64_t intersectionID);
+
+#endif	/* FUNCTIONS_H */
+

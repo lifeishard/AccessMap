@@ -1,0 +1,82 @@
+/* 
+ * File:   Functions.cpp
+ * Author: zhaozhi4
+ *
+ * Created on January 29, 2015, 3:33 PM
+ */
+
+#include "Functions.h"
+#include <unordered_map>
+#include <vector>
+#include <cstdint>
+#include <iostream>
+using namespace std;
+
+vector<int64_t> intersectStreetSegs(int64_t id)
+{
+    // First finds number of segments of that intersection
+    int64_t segCount = getIntersectionStreetSegmentCount(id);
+    // Creates the vector with appropriate number of elements
+    vector<int64_t> segIDs (segCount);
+    for(unsigned i = 0; i < segCount; i++)
+    { // Populates the vector with getIntersectionStreetSegment function
+        segIDs[i] = getIntersectionStreetSegment(id,i);
+    }
+    return segIDs;
+}
+
+bool intersectConnected(int64_t ID1, int64_t ID2)
+{
+    // Creates vectors containing street segments for each intersection
+    vector<int64_t> vec1 = intersectStreetSegs(ID1);
+    vector<int64_t> vec2 = intersectStreetSegs(ID2);
+    // Generic value if no connecting segment is found
+    int64_t connectingSeg = -1;
+    for(vector<int64_t>::iterator i = vec1.begin(); i != vec1.end(); ++i)
+    { // Using two iterators cycles through elements in both vectors
+        for(vector<int64_t>::iterator j = vec2.begin(); j != vec2.end(); ++j)
+        {
+            if(*i == *j)
+            { // If found, record segment ID
+                connectingSeg = *i;
+                // Check if the street is not one-way
+                if(!(getStreetSegmentOneWay(connectingSeg)))
+                    return true;
+                // If it is, do additional testing
+                // Using function getStreetSegmentEnds to get a struct that has to and from of a segment
+                StreetSegmentEnds tempSegStruct = getStreetSegmentEnds(connectingSeg);
+                // If "from" is the first intersection, then output true
+                if(int64_t(tempSegStruct.from) == ID1)
+                    return true;
+                return false;
+            }
+        }
+    }
+    // If none are found
+    return false;
+}
+
+vector<int64_t> intersectionAdjacent(int64_t intersectionID)
+{
+    // Creates vector containing all segments connected with intersection
+    vector<int64_t> segVec = intersectStreetSegs(intersectionID);
+    vector<int64_t> intVec;
+    unsigned intOther;
+    StreetSegmentEnds intStruct;
+    // For each segment, determine if this intersection can connect to the other
+    // then stores other intersection into a vector
+    for(vector<int64_t>::iterator i = segVec.begin(); i != segVec.end(); ++i)
+    { // Using an iterator to go through vector
+        // Using the struct StreetSegmentEnds to find ID of the other intersection connected
+        intStruct = getStreetSegmentEnds(*i);
+        if(int64_t(intStruct.from) == intersectionID)
+            intOther = intStruct.to;
+        else intOther = intStruct.from;
+        // If we can get from source intersection to destination intersection
+        if(intersectConnected(intersectionID,intOther))
+        { // If they are, record the ID of the other intersection in vector
+            intVec.push_back(intOther);
+        }
+    }
+    return intVec;
+}

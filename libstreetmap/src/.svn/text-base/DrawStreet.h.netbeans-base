@@ -1,0 +1,34 @@
+/* 
+ * File:   DrawStreet.h
+ * Author: chenyu69
+ *
+ * Created on March 7, 2015, 3:25 PM
+ */
+
+#ifndef DRAWSTREET_H
+#define	DRAWSTREET_H
+
+#include <string>
+#include <iostream>
+#include <cfloat> // for FLT_MAX
+#include <chrono>
+#include <thread>
+#include <cstdlib>
+#include <vector>
+#include "graphics.h"
+#include "Custapi.h"
+#include "Screen.h"
+
+using namespace std;
+
+char willDraw(double speed, double size);
+double getRadius(double speed);
+
+void drawStreetSeg(unsigned i, double radius, char isBorder);
+void drawIntersect(unsigned i, double currentSpeed, double currentSize, char isBorder);
+void drawFunctionals();
+
+void highlightPath(vector<int64_t> segs);
+
+#endif	/* DRAWSTREET_H */
+

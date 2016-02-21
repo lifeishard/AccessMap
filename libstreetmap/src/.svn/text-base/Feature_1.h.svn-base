@@ -1,0 +1,50 @@
+/* 
+ * File:   Feature.h
+ * Author: chenyu69
+ *
+ * Created on January 27, 2015, 11:27 PM
+ */
+
+#ifndef FEATURE_H
+#define	FEATURE_H
+#include "Cord.h"
+#include <vector>
+using namespace std;
+
+enum
+{
+    OPENFEATURE = 0,
+    CLOSEDFEATURE = 1
+};  
+
+
+//class containing features used for future milestones
+//such as parks, lakes etc..
+class Feature 
+{
+    public:
+        Feature();
+        Feature(const Feature& orig);
+        Feature(int64_t _ID, char _shape);
+        virtual ~Feature();
+        void setdrawPoints(vector<Cord> _drawPoints);
+        vector<Cord> getdrawPoints();
+        void testoutput();
+        bool isClosed();
+        void setCords( double _bottom, double _top,double _left,double _right);
+         double getbottom();
+        double gettop();
+        double getleft();
+        double getright();
+
+    private:
+        char shape;
+        int64_t ID;
+        vector<Cord> drawPoints;
+        double left,right,top,bottom;
+        
+        
+};
+
+#endif	/* FEATURE_H */
+

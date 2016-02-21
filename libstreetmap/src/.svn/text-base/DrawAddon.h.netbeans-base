@@ -1,0 +1,32 @@
+/* 
+ * File:   DrawAddon.h
+ * Author: chenyu69
+ *
+ * Created on March 7, 2015, 3:26 PM
+ */
+
+#ifndef DRAWADDON_H
+#define	DRAWADDON_H
+
+#include <string>
+#include <iostream>
+#include <cfloat> // for FLT_MAX
+#include <chrono>
+#include <thread>
+#include <cstdlib>
+#include <vector>
+#include "graphics.h"
+#include "DrawBackground.h"
+#include "Cord.h"
+
+using namespace std;
+
+void drawCompass();
+void drawScale();
+void drawMiniMap();
+
+void drawStreetSegLine(unsigned i);
+t_point getRotatedOrthogonal(t_point orig);
+
+#endif	/* DRAWADDON_H */
+

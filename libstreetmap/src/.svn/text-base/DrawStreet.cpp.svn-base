@@ -1,0 +1,380 @@
+#include "DrawStreet.h"
+
+void highlightPath(vector<unsigned> segs)
+{
+    if(segs.size() == 0) return;
+    vector<Cord> segBends;
+    setcolor(colorScheme[HIGHLIGHTC][colorMode]);
+    drawIntersect(allStreetSegs[segs[0]].getEnds().first, highlightSpeed, streetLargeSizeThreshold+1, 0);
+    for(unsigned i = 0; i < segs.size(); i++)
+    {
+        drawIntersect(allStreetSegs[segs[i]].getEnds().second, highlightSpeed, streetLargeSizeThreshold+1, 0);
+        drawStreetSeg(segs[i], highlightRadius, 0);
+        if(allStreetSegs[segs[i]].getBendPoints().size() > 0)
+        {
+            segBends = allStreetSegs[segs[i]].getBendPoints();
+            for (unsigned j = 0; j < segBends.size(); j++)
+            {
+                fillarc(segBends[j].getx(), segBends[j].gety(), highlightRadius, 0, 360);
+            }
+        }
+    }
+}
+
+void drawIntersect(unsigned i, double currentSpeed, double currentSize, char isBorder)
+{
+    if (willDraw(currentSpeed,currentSize))
+    {
+        double currentRadius = getRadius(currentSpeed);
+        if(isBorder)
+        {
+            drawarc(allIntersects[i].getLocation().getx(), allIntersects[i].getLocation().gety(), currentRadius, 0, 360);
+        } else {
+            fillarc(allIntersects[i].getLocation().getx(), allIntersects[i].getLocation().gety(), currentRadius, 0, 360);
+        }
+    }
+}
+
+void drawStreetSeg(unsigned i, double radius, char isBorder)
+{
+    double t1 = allStreetSegs[i].getEnds().first;
+    double t2 = allStreetSegs[i].getEnds().second;
+    double x1, y1, X1, Y1, X2, Y2, X3, Y3, X4, Y4;
+    // Creates an initial condition "end point"
+    double x2 = allIntersects[t1].getLocation().getx();
+    double y2 = allIntersects[t1].getLocation().gety();
+    double xShift;
+    double yShift;
+    double slopeRatio;
+    double actualRatio;
+    t_point segRect[4];
+    vector<Cord> segBends = allStreetSegs[i].getBendPoints();
+    for (unsigned j = 0; j < segBends.size(); j++) {
+        // Shifts old end point to new start point
+        x1 = x2;
+        y1 = y2;
+        x2 = segBends[j].getx();
+        y2 = segBends[j].gety();
+        slopeRatio = (y2 - y1) / (x2 - x1);
+        actualRatio = -1.0 / slopeRatio;
+        // Uses math to get four points of a rectangle from two points
+        // x^2 + y^2 = (thickness/2)^2
+        // then because we know y/x = -1/slope
+        // we can solve for x and y
+        xShift = pow((pow(radius, 2.0) / (1.0 + pow(actualRatio, 2.0))), 0.5);
+        yShift = pow((pow(radius, 2.0) / (1.0 + pow(1.0 / actualRatio, 2.0))), 0.5);
+        if ((x2 - x1) < 0) {
+            yShift = -yShift;
+        }
+        if ((y2 - y1) < 0) {
+            xShift = -xShift;
+        }
+        X1 = x1 + xShift;
+        Y1 = y1 - yShift;
+        X2 = x2 + xShift;
+        Y2 = y2 - yShift;
+        X3 = x2 - xShift;
+        Y3 = y2 + yShift;
+        X4 = x1 - xShift;
+        Y4 = y1 + yShift;
+
+        if(isBorder)
+        {
+            drawline(X1,Y1,X2,Y2);
+            drawline(X3,Y3,X4,Y4);
+        } else {
+            segRect[0] = t_point(X1, Y1);
+            segRect[1] = t_point(X2, Y2);
+            segRect[2] = t_point(X3, Y3);
+            segRect[3] = t_point(X4, Y4);
+            fillpoly(segRect, 4);
+        }
+    }
+    x1 = x2;
+    y1 = y2;
+    x2 = allIntersects[t2].getLocation().getx();
+    y2 = allIntersects[t2].getLocation().gety();
+    slopeRatio = (y2 - y1) / (x2 - x1);
+    actualRatio = -1.0 / slopeRatio;
+    // Uses math to get four points of a rectangle from two points
+    // x^2 + y^2 = (thickness/2)^2
+    // then because we know y/x = -1/slope
+    // we can solve for x and y
+    xShift = pow((pow(radius, 2.0) / (1.0 + pow(actualRatio, 2.0))), 0.5);
+    yShift = pow((pow(radius, 2.0) / (1.0 + pow(1.0 / actualRatio, 2.0))), 0.5);
+    if ((x2 - x1) < 0) {
+        yShift = -yShift;
+    }
+    if ((y2 - y1) < 0) {
+        xShift = -xShift;
+    }
+    X1 = x1 + xShift;
+    Y1 = y1 - yShift;
+    X2 = x2 + xShift;
+    Y2 = y2 - yShift;
+    X3 = x2 - xShift;
+    Y3 = y2 + yShift;
+    X4 = x1 - xShift;
+    Y4 = y1 + yShift;
+    if(isBorder)
+    {
+        drawline(X1,Y1,X2,Y2);
+        drawline(X3,Y3,X4,Y4);
+    } else {
+        segRect[0] = t_point(X1, Y1);
+        segRect[1] = t_point(X2, Y2);
+        segRect[2] = t_point(X3, Y3);
+        segRect[3] = t_point(X4, Y4);
+        fillpoly(segRect, 4);
+    }
+}
+
+void drawOneWay()
+{
+    vector<int64_t> streetSegs;
+    t_point oneWayArrow[7];
+    double segAngle, xc, yc;
+    double flatCorner = pow(pow(oneWayLength/2,2)+pow(oneWayWidth/2,2),0.5);
+    double flatCornerAngle = atan2(oneWayWidth,oneWayLength);
+    double arrowInner = pow(pow(oneWayLength/2-oneWayArrowSize/2,2)+pow(oneWayWidth/2,2),0.5);
+    double arrowInnerAngle = atan2(oneWayWidth/2,oneWayLength/2-oneWayArrowSize/2);
+    double arrowOuter = pow(pow(oneWayLength/2-oneWayArrowSize/2,2)+pow(oneWayArrowSize/2,2),0.5);
+    double arrowOuterAngle = atan2(oneWayArrowSize/2,oneWayLength/2-oneWayArrowSize/2);
+    double arrowTip = oneWayLength/2+oneWayArrowSize/2;
+    setcolor(colorScheme[ONEWAYC][colorMode]);
+    setlinestyle(SOLID);
+    setlinewidth(2);
+    for(unsigned i = 0; i < allStreets.size(); i++)
+    {
+        if(!onScreen(allStreets[i].getboundary())) continue;
+        streetSegs = allStreets[i].getSegs();
+        for(unsigned j = 0; j < streetSegs.size(); j++)
+        { // Loops through each segment of the street
+            if(!onScreen(allStreetSegs[streetSegs[j]].getboundary())) continue;
+            if(trueScreen.get_width() > oneWayThreshold) continue;
+            if(allStreetSegs[streetSegs[j]].getType() == ONEWAY)
+            { // Assume one-way from first to second ends
+                segAngle = atan2(allStreetSegs[streetSegs[j]].getEndsCord().second.gety()-allStreetSegs[streetSegs[j]].getEndsCord().first.gety(),
+                                 allStreetSegs[streetSegs[j]].getEndsCord().second.getx()-allStreetSegs[streetSegs[j]].getEndsCord().first.getx());
+                xc = (allStreetSegs[streetSegs[j]].getEndsCord().second.getx()+allStreetSegs[streetSegs[j]].getEndsCord().first.getx())/2;
+                yc = (allStreetSegs[streetSegs[j]].getEndsCord().second.gety()+allStreetSegs[streetSegs[j]].getEndsCord().first.gety())/2;
+                oneWayArrow[0] = t_point(xc-flatCorner*cos(segAngle+flatCornerAngle),yc-flatCorner*sin(segAngle+flatCornerAngle));
+                oneWayArrow[1] = t_point(xc-flatCorner*cos(segAngle-flatCornerAngle),yc-flatCorner*sin(segAngle-flatCornerAngle));
+                oneWayArrow[2] = t_point(xc+arrowInner*cos(segAngle+arrowInnerAngle),yc+arrowInner*sin(segAngle+arrowInnerAngle));
+                oneWayArrow[3] = t_point(xc+arrowOuter*cos(segAngle+arrowOuterAngle),yc+arrowOuter*sin(segAngle+arrowOuterAngle));
+                oneWayArrow[4] = t_point(xc+arrowTip*cos(segAngle),yc+arrowTip*sin(segAngle));
+                oneWayArrow[5] = t_point(xc+arrowOuter*cos(segAngle-arrowOuterAngle),yc+arrowOuter*sin(segAngle-arrowOuterAngle));
+                oneWayArrow[6] = t_point(xc+arrowInner*cos(segAngle-arrowInnerAngle),yc+arrowInner*sin(segAngle-arrowInnerAngle));
+                fillpoly(oneWayArrow,7);
+            }
+        }
+    }
+}
+
+void drawFunctionals()
+{
+    double currentRadius, currentSpeed, currentSize;
+    Cord tcord, tcord1, tcord2;
+    vector<int64_t> streetSegs;
+    vector<Cord> segBends;
+    currentRadius = 1;
+    
+    // In each street, if it's on screen,
+    // cycle through each of its segments,
+    // and draws segment borders and curve point borders
+    if(drawBorders)
+    {
+        setcolor(colorScheme[1][colorMode]);
+        for(unsigned i = 0; i < allStreets.size(); i++)
+        {
+            if(!onScreen(allStreets[i].getboundary())) continue;
+            streetSegs = allStreets[i].getSegs();
+            for(unsigned j = 0; j < streetSegs.size(); j++)
+            { // Loops through each segment of the street
+                if(!onScreen(allStreetSegs[streetSegs[j]].getboundary())) continue;
+                drawStreetNameID.push_back(j);
+                currentSpeed = allStreetSegs[streetSegs[j]].getSpeed();
+                if(allStreets[i].getName() == "(unknown)") {
+                    currentSpeed = 1;
+                }
+                if(willDraw(currentSpeed, allStreets[i].getLength()))
+                {
+                    currentRadius = getRadius(currentSpeed);
+                    if(currentSpeed < streetLargeThreshold)
+                    { // Street seg borders
+                        drawStreetSeg(streetSegs[j], currentRadius, 1);
+                        // Curve points borders
+                        if(allStreetSegs[streetSegs[j]].getBendPoints().size() > 0)
+                        {
+                            segBends = allStreetSegs[streetSegs[j]].getBendPoints();
+                            for (unsigned k = 0; k < segBends.size(); k++)
+                            { // Borders (don't need to reset color here because already set in seg borders)
+                                drawarc(segBends[k].getx(), segBends[k].gety(), currentRadius, 0, 360);
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+    // Intersects
+    // Draws intersects borders then intersects first so streets will block out
+    // unnecessary arcs created by this.
+    // All size-handling is processed in drawIntersect function
+    for(unsigned i = 0; i < allIntersects.size(); i++)
+    {
+        if(!onScreen(allIntersects[i].getLocation())) continue;
+        currentSpeed = allIntersects[i].getSpeed();
+        
+        if(currentSpeed < streetLargeThreshold)
+        { // willDraw is determined inside drawIntersect
+            currentSize = allIntersects[i].getLength();
+            if(drawBorders)
+            {
+                setcolor(colorScheme[1][colorMode]);
+                drawIntersect(i, currentSpeed, currentSize, 1);
+            }
+            setcolor(colorScheme[2][colorMode]);
+            drawIntersect(i, currentSpeed, currentSize, 0);
+        }
+    }
+    
+    // Actual street segs and curve points drawn here
+    setcolor(colorScheme[2][colorMode]);
+    for(unsigned i = 0; i < allStreets.size(); i++)
+    {
+        if(!onScreen(allStreets[i].getboundary())) continue;
+        streetSegs = allStreets[i].getSegs();
+        for(unsigned j = 0; j < streetSegs.size(); j++)
+        { // Loops through each segment of the street
+            if(!onScreen(allStreetSegs[streetSegs[j]].getboundary())) continue;
+            currentSpeed = allStreetSegs[streetSegs[j]].getSpeed();
+            if(allStreets[i].getName() == "(unknown)") {
+                currentSpeed = 1;
+            }
+            if(willDraw(currentSpeed, allStreets[i].getLength()))
+            {
+                currentRadius = getRadius(currentSpeed);
+                if(currentSpeed < streetLargeThreshold)
+                { // Street seg
+                    drawStreetSeg(streetSegs[j], currentRadius, 0);
+                    // Curve points 
+                    if(allStreetSegs[streetSegs[j]].getBendPoints().size() > 0)
+                    {
+                        segBends = allStreetSegs[streetSegs[j]].getBendPoints();
+                        for (unsigned k = 0; k < segBends.size(); k++)
+                        {
+                            fillarc(segBends[k].getx(), segBends[k].gety(), currentRadius, 0, 360);
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    // Large Streets
+    currentRadius = largeMultiplier * radius;
+    if(drawBorders)
+    {
+        setcolor(colorScheme[1][colorMode]);
+        for (unsigned i = 0; i < allHighwayStreetSegs.size(); i++)
+        {
+            // Segments borders
+            if(!onScreen(allStreetSegs[allHighwayStreetSegs[i]].getboundary())) continue;
+            drawStreetSeg(allHighwayStreetSegs[i], currentRadius, 1);
+        }
+    }
+    for (unsigned i = 0; i < allHighwayIntersects.size(); i++)
+    {
+        if(!onScreen(allIntersects[allHighwayIntersects[i]].getLocation())) continue;
+        if(drawBorders)
+        {
+            setcolor(colorScheme[1][colorMode]);
+            drawIntersect(allHighwayIntersects[i], streetLargeThreshold+1, streetLargeSizeThreshold+1, 1);
+        }
+        setcolor(colorScheme[3][colorMode]);
+        drawIntersect(allHighwayIntersects[i], streetLargeThreshold+1, streetLargeSizeThreshold+1, 0);
+    }
+    for (unsigned i = 0; i < allHighwayStreetSegs.size(); i++)
+    {
+        // Curve points
+        if(!onScreen(allStreetSegs[allHighwayStreetSegs[i]].getboundary()) || allStreetSegs[allHighwayStreetSegs[i]].getBendPoints().size() == 0) continue;
+        vector<Cord> segBends = allStreetSegs[allHighwayStreetSegs[i]].getBendPoints();
+        if(drawBorders)
+        {
+            setcolor(colorScheme[1][colorMode]);
+            for (unsigned j = 0; j < segBends.size(); j++)
+            {
+                drawarc(segBends[j].getx(), segBends[j].gety(), currentRadius, 0, 360);
+            }
+        }
+        setcolor(colorScheme[3][colorMode]);
+        for (unsigned j = 0; j < segBends.size(); j++)
+        {
+            fillarc(segBends[j].getx(), segBends[j].gety(), currentRadius, 0, 360);
+        }
+    }
+    setcolor(colorScheme[3][colorMode]);
+    for (unsigned i = 0; i < allHighwayStreetSegs.size(); i++)
+    {
+        // Segments
+        if(!onScreen(allStreetSegs[allHighwayStreetSegs[i]].getboundary())) continue;
+        drawStreetSeg(allHighwayStreetSegs[i], currentRadius, 0);
+    }
+}
+
+char willDraw(double speed, double size)
+{
+    // Returns 1 if speed and size both satisfy the thresholds
+    char currentOutput = 0;
+    double screen = tBoundCurrent.get_width();
+    if(screen < drawSmallThreshold)
+    { // Draw everything
+        return 1;
+    }
+    if(speed >= streetLargeThreshold)
+    {
+        if(screen < drawLargeThreshold)
+        {
+            currentOutput = 1;
+        }
+    } else if(speed >= streetMediumThreshold)
+    {
+        if(screen < drawMediumThreshold)
+        {
+            currentOutput = 1;
+        }
+    }
+    // If doesn't satisfy speed tests, outputs false
+    if(currentOutput == 0)
+    {
+        return 0;
+    }
+    // Now onto size tests
+    if(size >= streetLargeSizeThreshold)
+    {
+        if(screen < drawLargeSizeThreshold)
+        {
+            return 1;
+        }
+    } else if(size >= streetMediumSizeThreshold)
+    {
+        if(screen < drawMediumSizeThreshold)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+double getRadius(double speed)
+{
+    if(speed == highlightSpeed) return(highlightRadius);
+    if(speed >= streetLargeThreshold) return(largeMultiplier*radius);
+    if(speed >= streetMediumThreshold) return(mediumMultiplier*radius);
+    if(speed >= streetSmallThreshold) return(smallMultiplier*radius);
+    return(parkingMultiplier*radius);
+}

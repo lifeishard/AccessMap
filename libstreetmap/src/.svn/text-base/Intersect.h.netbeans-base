@@ -1,0 +1,56 @@
+/* 
+ * File:   Intersect.h
+ * Author: chenyu69
+ *
+ * Created on January 26, 2015, 4:44 PM
+ */
+
+#ifndef INTERSECT_H
+#define	INTERSECT_H
+#include <vector>
+#include "Cord.h"
+using namespace std;
+
+//classed used to represent street intersections 
+class Intersect 
+{
+    public:
+        Intersect();
+        Intersect(int64_t _ID, string _name,
+        vector<int64_t> _StreetSegs, vector<int64_t> _Neighbours,
+        vector<int64_t> _Streets);
+        Intersect(const Intersect& orig);
+        virtual ~Intersect();
+
+        //debug and optimization functions
+        void testoutput();
+        void memCleanUp();
+
+        //accessor functions
+        int64_t getID();
+        vector<int64_t> getStreetSegs();
+        vector<int64_t> getNeighbours();
+        vector<int64_t> getStreets();
+        Cord getLocation();
+        void setLocation(Cord _location);
+        double getSpeed();
+        void setSpeed(double _speed);
+        double getLength();
+        void setLength(double _length);
+    private:
+        int64_t ID;
+        Cord location;
+        string name;
+        //other intesersects ID that can be reached from this intersection
+        vector<int64_t> Neighbours;
+        //street segments ID connected to this intersection
+        vector<int64_t> StreetSegs;
+        //streets ID connected to this intersections
+        vector<int64_t> Streets;
+        
+        double speed;
+        double length;
+};
+
+#endif	/* INTERSECT_H */
+

@@ -1,0 +1,73 @@
+#ifndef M2_H
+#define	M2_H
+
+#include <string>
+#include "StreetsDatabaseAPI.h"
+#include "m1.h"
+#include "m3.h"
+#include <iostream>
+#include <cfloat> // for FLT_MAX
+#include <chrono>
+#include <thread>
+#include <cstdlib>
+#include <vector>
+#include "graphics.h"
+#include "DrawAddon.h"
+#include "DrawStreet.h"
+#include "DrawText.h"
+#include "DrawPOI.h"
+#include "Screen.h"
+#include "pthread.h"
+
+using namespace std;
+
+
+//this file is mainly used to graphically display the map information 
+//using easygl
+
+// Draws the map whose at map_path; this should be a .bin file.
+void draw_map(string map_path);
+// Callbacks for event-driven window handling.
+void drawscreen (void);
+void act_on_new_button_func (void (*drawscreen_ptr) (void));
+
+
+//button functions
+void rotateLeft ();
+void rotateRight();
+void switchColor();
+void search();
+void directions();
+void help();
+
+void act_on_button_press (float x, float y, t_event_buttonPressed event);
+void act_on_mouse_move (float x, float y);
+void act_on_key_press (char c);
+
+// A handy delay function for the animation example
+void delay (long milliseconds);
+
+
+
+//function to invert a cordinate back to latlon
+pair<double,double> invCord(pair<double,double> tempxy);
+
+pair<double, double> cordOffset(Cord a, Cord b, double offset);
+pair<double, double> cordOffset(pair<double,double> a, Cord b, double offset);
+string cutChar(string input);
+int64_t closestIntersection(float x, float y);
+
+
+void doSearch();
+vector<string> approximateFinder(string orig);
+vector<string> approximateNoStreetsFinder(string orig);
+char approximateString(string orig, string comp);
+
+vector<string> printDirections(vector<unsigned> path, string startPoint, string endPoint);
+char isValidPath(vector<unsigned> outputSeg);
+void redrawPreviousHover(char previousHover);
+
+void *drawAdditional(void *data);
+
+#endif
+

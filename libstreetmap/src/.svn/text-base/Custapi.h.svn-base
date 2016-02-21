@@ -1,0 +1,181 @@
+#ifndef CUSTAPI_H
+#define	CUSTAPI_H
+#include "Street.h"
+#include "StreetSeg.h"
+#include "Intersect.h"
+#include "Point.h"
+#include "StreetSeg.h"
+#include "Feature.h"
+#include "StreetsDatabaseAPI.h"
+#include <unordered_map>
+#include <iomanip>
+#include <vector>
+#include <cstdint>
+#include <assert.h>
+#include <iostream>
+#include <algorithm>
+#include "graphics.h"
+#include "Cord.h"
+#include "Color.h"
+
+
+
+
+#define KM_TO_M 0.0010
+
+#define NDEBUG
+using namespace std;
+
+extern vector<StreetSeg> allStreetSegs;
+extern vector<StreetSeg> allLargeStreetSegs;
+extern vector<Intersect> allIntersects;
+extern vector<Point> allPoints;
+extern vector<Street> allStreets;
+extern vector<Feature> allFeatures;
+extern vector<Feature> allLargeFeatures;
+extern vector<int64_t> allHighwayStreetSegs;
+extern vector<int64_t> allHighwayIntersects;
+
+extern unordered_map<string,int64_t> IntersectNametoID;
+extern unordered_map<string,int64_t> StreetNametoID;
+extern unordered_map<string,int64_t> PointNametoID;
+extern vector<pair<double,double> > allDrawInter; 
+extern double meanLat;
+extern double distSpeedVar;
+
+extern int64_t generalTextStart;
+extern double maxX, maxY;
+extern double miniX, miniY;
+extern double miniMultiplierX, miniMultiplierY;
+extern double mapRatio;
+extern char drawBorders;
+extern char colorMode;
+extern char isHelp;
+extern char currentHover;
+extern t_bound_box tBoundCurrent;
+extern double rotatedAngle;
+extern time_t messageTime;
+extern vector<string> messageText;
+extern vector<string> previousSearches;
+extern vector<string> generalText;
+
+// Some parameters used, can be tweaked
+const double radius = 4.5; // half-width of streets
+const double highlightRadius = 10; // half-width of highlighted streets
+const double highlightSpeed = 9999;
+const double textStayTime = 6; // how long the textboxes stay
+const double messageBoxWidth = 0.3; // How wide the textbox is
+const double messageBoxHeight = 0.045; // How tall the textbox is
+const double messageBoxDisplace = 0.075; // How far from bottom to draw
+const double messageTwoLineDisplace = 0.016; 
+const double messageTwoLineBorder = 0.005;
+const double oneWayLength = 8;
+const double oneWayWidth = 3;
+const double oneWayArrowSize = 6;
+const double oneWayThreshold = 3000;
+const double textMaxX = 10000000; // Arbitrary text box bound since we use different system
+const double textMaxY = 10000000;
+// At what ratio of segment length to screen width will the street
+// name display
+const double segLengthDisplayRatio = 0.06;
+const double streetNameThreshold = 35000; // Screen width to start showing street names
+const double nameTooCloseThreshold = 0.08; // Minimum point distance between each text draw
+const double segBorderThreshold = 40000; // Screen width to start showing street borders
+const double segBorderMultiplier = 5000; // Size of borders
+const double largeFeatureThreshold = 0.005; // Size of feature compared to screen size to be considered large
+const double drawFeatureThreshold = 0.0001; // What ratio of size to draw a feature
+const double drawPOIThreshold = 15000;
+const double drawPOINameThreshold = 2200;
+// Draw street distance/class
+const double streetSmallThreshold = 30; // At what (smallest) speed is street considered to be small)
+const double streetMediumThreshold = 40; // At what (smallest) speed is street considered to be medium
+const double streetLargeThreshold = 70; // At what (smallest) speed is street considered large
+const double streetMediumSizeThreshold = 1500; // (meters) Additional check to not draw small streets too early
+const double streetLargeSizeThreshold = 3000; // (meters)
+const double drawSmallThreshold = 4000; // largest screen size to start drawing small streets
+const double drawMediumThreshold = 35000; // Largest screen size to start drawing medium streets
+const double drawMediumSizeThreshold = 15000; // Largest screen size to draw medium sized streets
+const double drawLargeThreshold = 1000000; // Largest screen size to start drawing large streets
+const double drawLargeSizeThreshold = 1000000; // Largest screen size to draw large sized streets
+// Street width
+const double smallMultiplier = 1.1; // Size for small streets
+const double mediumMultiplier = 1.3; // Size for medium streets
+const double largeMultiplier = 1.7; // Size for large streets
+const double parkingMultiplier = 0.5; // Size for parking lots
+// Compass constants
+const double compassOffsetRatio = 0.042; // Distance from screen edge to draw compass
+const double compassSizeRatio = 0.022; // Size of compass
+const double compassArrowWidth = 0.01; // Width of north-pointing arrow
+const double compassNDisplace = 0.030; // Displacement of N from center of compass
+const double compassNOutLarge = 0.005; // Compass N larger width
+const double compassNInLarge = 0.002; // Compass N smaller width
+const double compassCircle = 0.025; // Compass circular size
+const double compassMask = 0.015; // Mask for the arrow
+const double compassMaskDisplace = 0.004; // Make the curve looks smoother
+// Rotate buttons constants
+const double rotateButtonLowDisplace = 0.045;
+const double rotateButtonDisplace = 0.032;
+const double rotateOuterRadius = 0.026;
+const double rotateButtonRadius = 0.010;
+const double rotateArrowSize = 0.008;
+const double rotateButtonStart = 0;
+const double rotateButtonEnd = 0;
+// Side buttons constants
+const double sideButtonLength = 0.08;
+const double sideButtonWidth = 0.025;
+const double sideButtonDisplace = 0.002;
+// Scale constants
+const double scaleOffsetRatio = 0.042; // Distance from screen top to draw scale
+const double scaleOffsetRatioSmall = 0.025; // Distance from screen right to draw scale
+const double scaleLengthRatio = 0.1; // Length of scale
+const double scaleBorderRatio = 0.0018; // Scale border size
+const double scaleBoxLengthRatio = 0.006; // Scale edge length
+const double scaleBoxWidthRatio = 0.003; // Scale edge width
+const double scaleTextOffsetRatio = 0.01; // How far down to draw scale text
+const double scaleMetersThreshold = 5000; // How many meters to change from km to m
+// Zoom buttons constants
+const double zoomDiameter = 0.02;
+const double zoomSymbolLength = 0.013;
+const double zoomSymbolWidth = 0.004;
+// Minimap constants
+const double miniOffsetRatio = 0.06; // How far from bottom right to draw minimap
+const double miniSizeRatio = 0.12; // Size of minimap
+// Previous searches box constants
+const double previousButtonWidth = 0.018;
+const double previousButtonHeight = 0.015;
+const double previousArrowWidth = 0.007;
+const double previousArrowHeight = 0.004;
+const double previousBoxWidth = 0.15;
+const int64_t previousElements = 5;
+// General dialog box constants
+const double generalButtonSize = 0.015;
+const double generalButtonSeparation = 0.001;
+const double generalArrowSize = 0.009;
+const double generalBoxSize = 0.22;
+const double generalSymbolDisplace = 0.02;
+const double generalSymbolWidth = 0.004;
+const double generalSymbolLength = 0.018;
+const double generalSymbolArrowSize = 0.009;
+const double generalTextOffset = 0.011;
+
+//data structures used for the whole map project
+
+void initializeCust();//used to initialize the custom api from m1
+
+//helper methods
+double distance(LatLon point1,LatLon point2);//find distance between two points
+double cordDistance(Cord a, Cord b);
+double cordDistance(pair<double,double> a, Cord b);
+double latLonDistance(double lat1, double lon1, double lat2, double lon2);
+double latLonOptimize(double lat1,double lon1); 
+void findClosestPOIIntersection(int64_t pointID);
+pair<double, double> realCord(LatLon point1); //find cartesian cordinates
+pair<double, double> tc(LatLon point1); //find cartesian cordinates
+vector<int64_t> removeIDDuplicates(vector<int64_t> orig); 
+vector<string> lineBreaker(string orig,unsigned spaceLen);//used to split up long name
+
+
+//to be displayed on multiple lines
+
+#endif	/* CUSTAPI_H */
+

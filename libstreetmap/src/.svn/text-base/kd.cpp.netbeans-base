@@ -1,0 +1,23 @@
+/* 
+ * File:   kd.cpp
+ * Author: chenyu69
+ * 
+ * Created on February 1, 2015, 11:33 PM
+ */
+
+#include "kd.h"
+
+kd::kd() {
+}
+
+kd::kd(const kd& orig) {
+    ID = orig.ID;
+    x = orig.x;
+    y = orig.y;
+    left = orig.left;
+    right = orig.right;
+}
+
+kd::~kd() {
+}
+
